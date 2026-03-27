@@ -6,7 +6,6 @@ services:
     dockerContext: .
     dockerfilePath: Dockerfile
     plan: free
-    healthCheckPath: /api/health
     envVars:
       - key: PORT
         value: 7000
@@ -18,7 +17,7 @@ services:
       - key: MEMGRAPH_PORT
         value: 7687
       - key: GEMINI_API_KEY
-        sync: false
+        sync: false # Set this in the Render Dashboard during setup
 
   # --- FRONTEND SERVICE ---
   - type: web
@@ -29,13 +28,11 @@ services:
     plan: free
 
   # --- MEMGRAPH DATABASE ---
-  - type: web # Changed from privateService/pvt to web for blueprint compatibility
+  - type: web
     name: jansetu-memgraph
     env: docker
-    dockerContext: .
     image: memgraph/memgraph-mage:latest
     plan: free
-    # We define the port but Render will keep it internal if we don't use it as a web server
     ports:
       - port: 7687
         protocol: TCP
