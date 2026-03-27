@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>JanSetu AI — Booth Intelligence System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="/ui/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/vis-network@9.1.9/standalone/umd/vis-network.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#060a12;
+  --surface:#0d1424;
+  --surface2:#131d30;
+  --surface3:#1a2640;
+  --border:#ffffff0f;
+  --border2:#ffffff1a;
+  --border3:#ffffff2a;
+  --text:#dde4f0;
+  --text2:#7a8ba8;
+  --text3:#3a4a62;
+  --green:#1edb85;
+  --green-dim:#0a2a1c;
+  --green-glow:#1edb8520;
+  --amber:#f5b930;
+  --amber-dim:#2e2008;
+  --red:#ff4d6a;
+  --red-dim:#2e0812;
+  --blue:#3d9ef7;
+  --blue-dim:#082038;
+  --purple:#a78bfa;
+  --font:'Space Grotesk',sans-serif;
+  --mono:'IBM Plex Mono',monospace;
+  --radius:10px;
+  --radius-lg:14px;
+}
+html{font-size:15px;background:var(--bg);}
+body{font-family:var(--font);color:var(--text);min-height:100vh;line-height:1.6;background:var(--bg);}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 50% at 20% -10%,#1edb8508,transparent),radial-gradient(ellipse 60% 40% at 80% 110%,#3d9ef706,transparent);pointer-events:none;z-index:0;}
+
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--surface3);border-radius:2px;}
+
+.shell{display:grid;grid-template-columns:230px 1fr;min-height:100vh;position:relative;z-index:1;}
+
+/* ── Sidebar ── */
+.sidebar{background:var(--surface);border-right:1px solid var(--border);padding:1.5rem 1rem;display:flex;flex-direction:column;gap:1.75rem;position:sticky;top:0;height:100vh;overflow-y:auto;}
+.brand{display:flex;align-items:center;gap:11px;padding:4px 6px;}
+.brand-logo{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#1edb85,#3d9ef7);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:#060a12;flex-shrink:0;box-shadow:0 0 20px #1edb8540;}
+.brand-name{font-size:15px;font-weight:700;letter-spacing:-.01em;}
+.brand-sub{font-size:10px;color:var(--text3);font-family:var(--mono);margin-top:1px;}
+
+.nav-group{display:flex;flex-direction:column;gap:2px;}
+.nav-label{font-size:9px;color:var(--text3);font-weight:600;letter-spacing:.1em;text-transform:uppercase;padding:0 8px;margin-bottom:4px;}
+.nav-item{display:flex;align-items:center;gap:9px;padding:7px 10px;border-radius:8px;font-size:13px;font-weight:500;color:var(--text2);cursor:pointer;border:none;background:transparent;width:100%;text-align:left;transition:all .15s;}
+.nav-item:hover{background:var(--surface2);color:var(--text);}
+.nav-item.active{background:linear-gradient(90deg,var(--green-glow),transparent);color:var(--green);border-left:2px solid var(--green);}
+.nav-icon{font-size:14px;width:16px;text-align:center;flex-shrink:0;}
+.nav-badge{margin-left:auto;font-size:10px;font-family:var(--mono);padding:1px 6px;border-radius:4px;background:var(--amber-dim);color:var(--amber);}
+
+.status-block{margin-top:auto;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:12px;}
+.status-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
+.status-row:last-child{margin-bottom:0;}
+.status-label{font-size:10px;color:var(--text3);font-family:var(--mono);}
+.status-val{font-size:11px;font-family:var(--mono);font-weight:500;}
+.dot-online{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);display:inline-block;margin-right:5px;}
+.dot-offline{width:6px;height:6px;border-radius:50%;background:var(--red);display:inline-block;margin-right:5px;}
+
+/* ── Main ── */
+.main{padding:1.75rem 2rem;display:flex;flex-direction:column;gap:1.5rem;overflow-x:hidden;min-height:100vh;}
+
+/* ── Topbar ── */
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;}
+.page-title{font-size:21px;font-weight:700;letter-spacing:-.02em;}
+.page-sub{font-size:11px;color:var(--text3);margin-top:2px;font-family:var(--mono);}
+.topbar-actions{display:flex;gap:8px;align-items:center;}
+select.ctrl{font-family:var(--font);font-size:12px;padding:6px 12px;border-radius:8px;background:var(--surface2);border:1px solid var(--border2);color:var(--text);cursor:pointer;outline:none;transition:border-color .15s;}
+select.ctrl:focus{border-color:var(--green);}
+.btn{font-family:var(--font);font-size:12px;font-weight:600;padding:7px 16px;border-radius:8px;border:none;cursor:pointer;transition:all .15s;}
+.btn-green{background:var(--green);color:#060a12;}.btn-green:hover{opacity:.88;}
+.btn-outline{background:transparent;border:1px solid var(--border2);color:var(--text2);}.btn-outline:hover{border-color:var(--green);color:var(--green);}
+.btn-seed{background:linear-gradient(90deg,#1edb85,#3d9ef7);color:#060a12;font-weight:700;}.btn-seed:hover{opacity:.9;}
+
+/* ── Metrics ── */
+.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;}
+.metric-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.1rem 1.25rem;position:relative;overflow:hidden;transition:all .2s;}
+.metric-card:hover{border-color:var(--border2);transform:translateY(-2px);}
+.metric-card::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--accent,var(--green));}
+.metric-card.amber{--accent:var(--amber);}.metric-card.blue{--accent:var(--blue);}.metric-card.red{--accent:var(--red);}.metric-card.purple{--accent:var(--purple);}
+.metric-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;font-weight:600;}
+.metric-value{font-size:28px;font-weight:700;font-family:var(--mono);color:var(--green);line-height:1;}
+.metric-card.amber .metric-value{color:var(--amber);}.metric-card.blue .metric-value{color:var(--blue);}.metric-card.red .metric-value{color:var(--red);}.metric-card.purple .metric-value{color:var(--purple);}
+.metric-sub{font-size:10px;color:var(--text3);margin-top:6px;font-family:var(--mono);}
+.metric-trend{position:absolute;top:14px;right:14px;font-size:18px;opacity:.15;}
+
+/* ── Cards ── */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.25rem;}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.1rem;}
+.card-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);}
+.card-action{font-size:11px;color:var(--blue);cursor:pointer;background:none;border:none;font-family:var(--font);}
+.row2{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:1.25rem;}
+
+/* ── Booth Detail Section ── */
+.booth-selector{display:flex;gap:10px;align-items:center;margin-bottom:1.25rem;}
+.booth-selector select{flex:1;max-width:300px;}
+.booth-detail-panel{display:none;margin-top:1.5rem;}
+.booth-detail-panel.active{display:block;}
+.booth-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:1.5rem;}
+.booth-stat-item{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:1rem;text-align:center;}
+.booth-stat-label{font-size:10px;color:var(--text3);text-transform:uppercase;font-weight:600;margin-bottom:8px;}
+.booth-stat-value{font-size:24px;font-weight:700;color:var(--green);font-family:var(--mono);}
+
+/* ── Citizens Table ── */
+.table-wrap{overflow-x:auto;}
+.data-table{width:100%;border-collapse:collapse;font-size:12px;}
+.data-table th{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;font-weight:600;padding:6px 10px;text-align:left;border-bottom:1px solid var(--border);}
+.data-table td{padding:9px 10px;border-bottom:1px solid var(--border);color:var(--text);vertical-align:middle;}
+.data-table tr:last-child td{border-bottom:none;}
+.data-table tr:hover td{background:var(--surface2);}
+.citizen-row-scheme{display:inline-block;padding:2px 8px;background:var(--green-dim);color:var(--green);border-radius:3px;font-size:9px;margin-right:4px;margin-bottom:3px;font-family:var(--mono);}
+.citizen-row-segment{display:inline-block;padding:2px 8px;background:var(--blue-dim);color:var(--blue);border-radius:3px;font-size:9px;margin-right:4px;}
+
+/* ── Scheme bars ── */
+.pill-bar{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;}
+.pill{font-size:11px;padding:4px 12px;border-radius:20px;border:1px solid var(--border2);background:transparent;color:var(--text2);cursor:pointer;font-family:var(--font);transition:all .15s;}
+.pill:hover{border-color:var(--green);color:var(--green);}.pill.active{background:var(--green);color:#060a12;border-color:var(--green);font-weight:600;}
+.scheme-item{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);}
+.scheme-item:last-child{border-bottom:none;}
+.scheme-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.scheme-name{font-size:12px;flex:1;color:var(--text);}
+.scheme-bar-track{height:3px;background:var(--surface3);border-radius:2px;flex:1;overflow:hidden;}
+.scheme-bar-fill{height:100%;border-radius:2px;transition:width .7s cubic-bezier(.22,1,.36,1);}
+.scheme-pct{font-size:11px;font-weight:600;font-family:var(--mono);min-width:32px;text-align:right;}
+
+/* ── Booth grid ── */
+.booth-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;}
+.booth-cell{border-radius:9px;padding:10px 6px;text-align:center;cursor:pointer;transition:transform .15s,box-shadow .15s;border:1px solid transparent;}
+.booth-cell:hover{transform:scale(1.07);box-shadow:0 4px 20px #0006;}
+.booth-cell.selected{border:2px solid var(--green);box-shadow:0 0 15px var(--green-glow);}
+.booth-id{font-size:9px;font-family:var(--mono);margin-bottom:3px;font-weight:500;}
+.booth-pct{font-size:17px;font-weight:700;font-family:var(--mono);}
+.booth-dist{font-size:8px;margin-top:2px;}
+
+/* ── Views ── */
+.view{display:none;flex-direction:column;gap:1.25rem;animation:fadeUp .3s ease both;}
+.view.active{display:flex;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+
+/* ── Toast ── */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--surface2);border:1px solid var(--green);color:var(--green);padding:9px 16px;border-radius:9px;font-size:12px;font-family:var(--mono);opacity:0;transform:translateY(8px);transition:all .25s;pointer-events:none;z-index:999;}
+.toast.show{opacity:1;transform:translateY(0);}
+
+/* ── Responsive ── */
+@media(max-width:960px){.shell{grid-template-columns:1fr;}.sidebar{display:none;}.metrics{grid-template-columns:repeat(2,1fr);}.row2{grid-template-columns:1fr;}.booth-grid{grid-template-columns:repeat(4,1fr);}.booth-stats{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<div class="shell">
+
+<!-- ═══ SIDEBAR ═══ -->
+<aside class="sidebar">
+  <div class="brand">
+    <div class="brand-logo">J</div>
+    <div>
+      <div class="brand-name">JanSetu AI</div>
+      <div class="brand-sub">v3.1 · Booth Details</div>
+    </div>
+  </div>
+
+  <nav class="nav-group">
+    <div class="nav-label">Monitor</div>
+    <button class="nav-item active" onclick="showView('overview',this)"><span class="nav-icon">◈</span>District Overview</button>
+    <button class="nav-item" onclick="showView('booth-detail',this)"><span class="nav-icon">◐</span>Booth Details</button>
+    <button class="nav-item" onclick="showView('citizens',this)"><span class="nav-icon">◎</span>Citizen Search</button>
+  </nav>
+
+  <div class="status-block">
+    <div class="status-row">
+      <span class="status-label">API Status</span>
+      <span class="status-val" id="api-status" style="color:var(--amber)">—</span>
+    </div>
+    <div class="status-row">
+      <span class="status-label">Last Sync</span>
+      <span class="status-val" id="sync-time" style="color:var(--text3)">—</span>
+    </div>
+  </div>
+</aside>
+
+<!-- ═══ MAIN ═══ -->
+<main class="main">
+  <div class="topbar">
+    <div>
+      <div class="page-title">JanSetu AI: Booth Intelligence</div>
+      <div class="page-sub" id="topbar-sub">Loading district data…</div>
+    </div>
+    <div class="topbar-actions">
+      <button class="btn btn-outline" onclick="checkHealth()">⬡ Health</button>
+      <button class="btn btn-outline" onclick="loadAll()">↻ Refresh</button>
+      <button class="btn btn-seed" onclick="seedDemo()">⚡ Seed Demo Data</button>
+    </div>
+  </div>
+
+  <!-- ═══ DISTRICT OVERVIEW ═══ -->
+  <div class="view active" id="view-overview">
+    <div class="metrics">
+      <div class="metric-card">
+        <div class="metric-trend">👥</div>
+        <div class="metric-label">Total Voters</div>
+        <div class="metric-value" id="m-total">—</div>
+        <div class="metric-sub" id="m-sub1">All booths</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-trend">✅</div>
+        <div class="metric-label">Enrolled</div>
+        <div class="metric-value" id="m-enrolled">—</div>
+        <div class="metric-sub" id="m-sat">—% saturation</div>
+      </div>
+      <div class="metric-card amber">
+        <div class="metric-trend">⚡</div>
+        <div class="metric-label">Floating Nodes</div>
+        <div class="metric-value" id="m-gap">—</div>
+        <div class="metric-sub">Eligible · unenrolled</div>
+      </div>
+      <div class="metric-card blue">
+        <div class="metric-trend">📨</div>
+        <div class="metric-label">Nudges Sent</div>
+        <div class="metric-value" id="m-nudges">0</div>
+        <div class="metric-sub">Via Gemini Flash</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">All Booths - Click to View Details</div>
+      </div>
+      <div class="booth-grid" id="booth-grid"></div>
+    </div>
+  </div>
+
+  <!-- ═══ BOOTH DETAIL ═══ -->
+  <div class="view" id="view-booth-detail">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Select a Booth to View Details</div>
+      </div>
+      <div class="booth-selector">
+        <select class="ctrl" id="booth-select" onchange="loadBoothDetail()">
+          <option value="">— Select Booth —</option>
+        </select>
+        <button class="btn btn-outline" onclick="loadBoothDetail()">Load Details</button>
+      </div>
+
+      <!-- Booth Detail Panel -->
+      <div class="booth-detail-panel" id="booth-detail-panel">
+        <div class="booth-stats">
+          <div class="booth-stat-item">
+            <div class="booth-stat-label">Booth ID</div>
+            <div class="booth-stat-value" id="bs-id">—</div>
+          </div>
+          <div class="booth-stat-item">
+            <div class="booth-stat-label">Total Citizens</div>
+            <div class="booth-stat-value" id="bs-total">—</div>
+          </div>
+          <div class="booth-stat-item">
+            <div class="booth-stat-label">Saturation %</div>
+            <div class="booth-stat-value" id="bs-sat">—</div>
+          </div>
+        </div>
+
+        <div style="margin-bottom:1.5rem;padding:10px;background:var(--surface2);border-radius:var(--radius);border-left:3px solid var(--blue);">
+          <div style="font-size:11px;color:var(--text2);margin-bottom:6px">District</div>
+          <div style="font-size:14px;font-weight:600;color:var(--text)" id="bs-district">—</div>
+        </div>
+
+        <div>
+          <div class="card-title" style="margin-bottom:1rem;">Citizens in This Booth</div>
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Phone</th>
+                  <th>Age</th>
+                  <th>Segment</th>
+                  <th>Occupation</th>
+                  <th>Enrolled Schemes</th>
+                  <th>Gaps (Unenrolled)</th>
+                </tr>
+              </thead>
+              <tbody id="booth-citizens-table">
+                <tr><td colspan="7" style="text-align:center;color:var(--text3);padding:20px">Select a booth to view citizens</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Floating Nodes Summary -->
+        <div style="margin-top:1.5rem;padding:1rem;background:var(--amber-dim);border-radius:var(--radius);border-left:3px solid var(--amber);">
+          <div style="font-size:11px;color:var(--amber);text-transform:uppercase;font-weight:600;margin-bottom:8px">⚡ Floating Nodes in This Booth</div>
+          <div style="font-size:13px;color:var(--text);" id="booth-floating-summary">—</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ CITIZENS ═══ -->
+  <div class="view" id="view-citizens">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Citizen Search</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px;max-width:480px">
+        <input class="input" id="citizen-search" type="text" placeholder="Search by name, phone, or booth…" onkeydown="if(event.key==='Enter')searchCitizen()"/>
+        <button class="btn btn-green" onclick="searchCitizen()">Search Citizen</button>
+        <div id="search-results"></div>
+      </div>
+    </div>
+  </div>
+
+</main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = '';
+let allBooths = [], allCitizens = [];
+
+/* ── Utilities ── */
+function toast(msg, color='var(--green)'){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.borderColor = color;
+  t.style.color = color;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 3500);
+}
+
+function boothColor(p){
+  if(p>=80) return {bg:'#0a2a1c', text:'#1edb85', border:'#1edb8530'};
+  if(p>=60) return {bg:'#2e2008', text:'#f5b930', border:'#f5b93030'};
+  if(p>=40) return {bg:'#2e0812', text:'#ff4d6a', border:'#ff4d6a30'};
+  return {bg:'#1a0610', text:'#fc8181', border:'#fc818130'};
+}
+
+/* ── Navigation ── */
+function showView(view, btn){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
+  document.getElementById('view-'+view).classList.add('active');
+  if(btn) btn.classList.add('active');
+  if(view==='booth-detail') populateBoothSelect();
+}
+
+/* ── Main Loads ── */
+async function loadAll(){
+  document.getElementById('sync-time').textContent = new Date().toLocaleTimeString('en-IN');
+  try{
+    const resp = await fetch(`${API}/api/stats`).then(r=>r.json());
+    document.getElementById('m-total').textContent = resp.total_citizens?.toLocaleString() || '—';
+    document.getElementById('m-enrolled').textContent = resp.enrolled_citizens?.toLocaleString() || '—';
+    document.getElementById('m-gap').textContent = resp.floating_nodes?.toLocaleString() || '—';
+    document.getElementById('m-sat').textContent = (resp.saturation_percentage || 0) + '% saturation';
+    document.getElementById('topbar-sub').textContent = `Karnataka · ${resp.saturation_percentage || 0}% saturation`;
+    document.getElementById('api-status').innerHTML = '<span class="dot-online"></span>Connected';
+    document.getElementById('api-status').style.color = 'var(--green)';
+    
+    await loadBooths();
+  }catch(e){
+    console.error(e);
+    document.getElementById('api-status').innerHTML = '<span class="dot-offline"></span>Offline';
+    document.getElementById('api-status').style.color = 'var(--red)';
+    toast('API offline','var(--red)');
+  }
+}
+
+/* ── Load All Booths ── */
+async function loadBooths(){
+  try{
+    const resp = await fetch(`${API}/api/booths`).then(r=>r.json());
+    allBooths = resp.booths || [];
+    renderBoothGrid();
+  }catch(e){
+    console.error('Error loading booths:', e);
+    allBooths = [];
+  }
+}
+
+function renderBoothGrid(){
+  const grid = document.getElementById('booth-grid');
+  if(!allBooths.length){
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--text3);padding:2rem">No booth data. Click ⚡ Seed Demo Data.</div>';
+    return;
+  }
+  grid.innerHTML = allBooths.map(b => {
+    const color = boothColor(b.saturation_pct || 0);
+    return `
+      <div class="booth-cell" style="background:${color.bg};border:1px solid ${color.border};cursor:pointer;" onclick="selectBoothFromGrid('${b.booth_id}')">
+        <div class="booth-id">${b.booth_id}</div>
+        <div class="booth-pct" style="color:${color.text}">${Math.round(b.saturation_pct || 0)}%</div>
+        <div class="booth-dist" style="color:${color.text}">${b.district}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+function selectBoothFromGrid(boothId){
+  document.getElementById('booth-select').value = boothId;
+  showView('booth-detail');
+  setTimeout(() => loadBoothDetail(), 100);
+}
+
+/* ── Populate Booth Selector ── */
+function populateBoothSelect(){
+  const sel = document.getElementById('booth-select');
+  const currentVal = sel.value;
+  sel.innerHTML = '<option value="">— Select Booth —</option>';
+  allBooths.forEach(b => {
+    const opt = document.createElement('option');
+    opt.value = b.booth_id;
+    opt.textContent = `${b.booth_id} (${b.district}) - ${Math.round(b.saturation_pct || 0)}%`;
+    sel.appendChild(opt);
+  });
+  sel.value = currentVal;
+}
+
+/* ── Load Booth Detail ── */
+async function loadBoothDetail(){
+  const boothId = document.getElementById('booth-select').value;
+  if(!boothId){
+    toast('Please select a booth','var(--amber)');
+    return;
+  }
+
+  try{
+    const resp = await fetch(`${API}/booth/${boothId}/stats`).then(r=>r.json());
+    const details = resp;
+    
+    // Update booth stats
+    document.getElementById('bs-id').textContent = boothId;
+    document.getElementById('bs-total').textContent = details.total_citizens || '—';
+    document.getElementById('bs-sat').textContent = Math.round(details.saturation_pct || 0) + '%';
+    document.getElementById('bs-district').textContent = details.district || '—';
+
+    // Load citizens for this booth
+    await loadBoothCitizens(boothId);
+
+    // Load floating nodes
+    await loadBoothFloatingNodes(boothId);
+
+    // Show detail panel
+    document.getElementById('booth-detail-panel').classList.add('active');
+    toast(`✓ Loaded booth ${boothId}`);
+
+  }catch(e){
+    console.error('Error loading booth detail:', e);
+    toast('Failed to load booth details','var(--red)');
+  }
+}
+
+/* ── Load Citizens for Booth ── */
+async function loadBoothCitizens(boothId){
+  try{
+    // Use citizen search API to find citizens by booth
+    const resp = await fetch(`${API}/citizen/search?booth_no=${boothId}`).then(r=>r.json());
+    const citizens = resp.results || [];
+    
+    const tbody = document.getElementById('booth-citizens-table');
+    if(!citizens.length){
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text3);padding:20px">No citizens found in this booth</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = citizens.map(c => {
+      const enrolled = c.enrolled_schemes ? c.enrolled_schemes.split('|').filter(s=>s.trim()) : [];
+      const eligible = c.eligible_schemes ? c.eligible_schemes.split('|').filter(s=>s.trim()) : [];
+      const gaps = eligible.filter(s => !enrolled.includes(s));
+
+      return `
+        <tr>
+          <td><strong>${c.name || '—'}</strong></td>
+          <td style="font-family:var(--mono);font-size:11px">${c.phone || '—'}</td>
+          <td>${c.age || '—'}</td>
+          <td><span class="citizen-row-segment">${c.segment || 'General'}</span></td>
+          <td>${c.occupation || '—'}</td>
+          <td>
+            ${enrolled.map(s => `<span class="citizen-row-scheme">${s.split('(')[0].trim()}</span>`).join('')}
+            ${!enrolled.length ? '<span style="color:var(--text3)">—</span>' : ''}
+          </td>
+          <td>
+            ${gaps.map(s => `<span style="display:inline-block;padding:2px 6px;background:var(--amber-dim);color:var(--amber);border-radius:3px;font-size:9px;margin-right:3px;margin-bottom:2px;">${s.split('(')[0].trim()}</span>`).join('')}
+            ${!gaps.length ? '<span style="color:var(--text3)">—</span>' : ''}
+          </td>
+        </tr>
+      `;
+    }).join('');
+
+  }catch(e){
+    console.error('Error loading citizens:', e);
+    document.getElementById('booth-citizens-table').innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--red)">Error loading citizens</td></tr>';
+  }
+}
+
+/* ── Load Floating Nodes for Booth ── */
+async function loadBoothFloatingNodes(boothId){
+  try{
+    const resp = await fetch(`${API}/booth/${boothId}/gaps`).then(r=>r.json());
+    const floating = resp.floating_nodes || [];
+    const topGaps = resp.top_gaps || [];
+
+    let summary = '';
+    if(floating.length === 0){
+      summary = '<span style="color:var(--green)">✓ All eligible citizens enrolled!</span>';
+    } else {
+      summary = `<strong>${floating.length}</strong> citizens are eligible but not enrolled for: `;
+      if(topGaps.length > 0){
+        summary += topGaps.map(g => `<strong style="color:var(--amber)">${g.scheme}</strong> (${g.count} citizens)`).join(', ');
+      }
+    }
+
+    document.getElementById('booth-floating-summary').innerHTML = summary;
+
+  }catch(e){
+    console.error('Error loading floating nodes:', e);
+    document.getElementById('booth-floating-summary').textContent = 'Error loading data';
+  }
+}
+
+/* ── Health Check ── */
+async function checkHealth(){
+  try{
+    const h = await fetch(`${API}/health/db`).then(r=>r.json());
+    toast(`✓ Database: ${h.status}`);
+  }catch{
+    toast('Health check failed','var(--red)');
+  }
+}
+
+/* ── Seed Demo ── */
+async function seedDemo(){
+  const btn = event.target;
+  btn.textContent = '⚡ Seeding…';
+  btn.disabled = true;
+  try{
+    // In real implementation, call /api/seed endpoint
+    toast('Seeding would populate demo data');
+    setTimeout(() => {
+      btn.textContent = '⚡ Seed Demo Data';
+      btn.disabled = false;
+      loadAll();
+    }, 2000);
+  }catch(e){
+    toast('Seed failed','var(--red)');
+    btn.textContent = '⚡ Seed Demo Data';
+    btn.disabled = false;
+  }
+}
+
+/* ── Citizen Search ── */
+async function searchCitizen(){
+  const query = document.getElementById('citizen-search').value.trim();
+  if(!query){
+    toast('Enter a search term','var(--amber)');
+    return;
+  }
+
+  try{
+    // Try searching by name, phone, or booth
+    const results = await Promise.all([
+      fetch(`${API}/citizen/search?name=${query}`).then(r=>r.json()).catch(e=>({results:[]})),
+      fetch(`${API}/citizen/search?phone=${query}`).then(r=>r.json()).catch(e=>({results:[]})),
+      fetch(`${API}/citizen/search?booth_no=${query}`).then(r=>r.json()).catch(e=>({results:[]})),
+    ]);
+
+    const allResults = [...(results[0].results || []), ...(results[1].results || []), ...(results[2].results || [])];
+    const uniqueResults = Array.from(new Map(allResults.map(r => [r.phone || r.name, r])).values());
+
+    const resultsDiv = document.getElementById('search-results');
+    if(uniqueResults.length === 0){
+      resultsDiv.innerHTML = '<div style="margin-top:1rem;color:var(--text3);padding:1rem;background:var(--surface2);border-radius:var(--radius)">No results found</div>';
+      return;
+    }
+
+    resultsDiv.innerHTML = `
+      <div style="margin-top:1rem">
+        <div style="color:var(--text3);font-size:11px;margin-bottom:8px">Found ${uniqueResults.length} result(s)</div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Phone</th>
+                <th>Booth</th>
+                <th>Segment</th>
+                <th>Enrolled</th>
+                <th>Gaps</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${uniqueResults.map(c => {
+                const enrolled = c.enrolled_schemes ? c.enrolled_schemes.split('|').filter(s=>s.trim()).length : 0;
+                const eligible = c.eligible_schemes ? c.eligible_schemes.split('|').filter(s=>s.trim()).length : 0;
+                const gaps = eligible - enrolled;
+                return `
+                  <tr>
+                    <td><strong>${c.name || '—'}</strong></td>
+                    <td style="font-family:var(--mono);font-size:11px">${c.phone || '—'}</td>
+                    <td style="font-family:var(--mono)">${c.booth_no || c.booth_id || '—'}</td>
+                    <td><span class="citizen-row-segment">${c.segment || 'General'}</span></td>
+                    <td>${enrolled}</td>
+                    <td><strong style="color:var(--amber)">${gaps}</strong></td>
+                  </tr>
+                `;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `;
+
+  }catch(e){
+    console.error(e);
+    toast('Search failed','var(--red)');
+  }
+}
+
+/* ── Init ── */
+window.addEventListener('load', () => {
+  loadAll();
+});
+</script>
+
+</body>
+</html>

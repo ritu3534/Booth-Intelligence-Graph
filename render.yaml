@@ -1,0 +1,36 @@
+services:
+  # --- BACKEND SERVICE ---
+  - type: web
+    name: jansetu-backend
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn dashboard:app --host 0.0.0.0 --port 7000
+    envVars:
+      - key: MEMGRAPH_HOST
+        fromService:
+          type: redis # We will use a private service for Memgraph
+          name: jansetu-memgraph
+          property: host
+      - key: MEMGRAPH_PORT
+        value: 7687
+
+  # --- FRONTEND SERVICE ---
+  - type: web
+    name: jansetu-frontend
+    env: static
+    buildCommand: "" # No build needed for static HTML
+    staticPublishDir: .
+    envVars:
+      - key: API_BASE_URL
+        fromService:
+          type: web
+          name: jansetu-backend
+          property: url
+
+  # --- MEMGRAPH (Private Service) ---
+  - type: pvt
+    name: jansetu-memgraph
+    image: memgraph/memgraph-mage:latest
+    ports:
+      - port: 7687
+        protocol: TCP

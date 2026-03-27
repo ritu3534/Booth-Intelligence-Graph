@@ -1,0 +1,7 @@
+FROM nginx:alpine
+# Copy your frontend files to the Nginx html folder
+COPY index.html /usr/share/nginx/html/
+# If you have CSS/JS folders, copy them too:
+# COPY ui/ /usr/share/nginx/html/ui/
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]

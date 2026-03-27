@@ -1,0 +1,48 @@
+# --- Git & System ---
+.git
+.gitignore
+.DS_Store
+Thumbs.db
+
+# --- Python & Environments ---
+# Prevents uploading the heavy 'venv' folder
+venv/
+env/
+bin/
+lib/
+share/
+include/
+__pycache__/
+*.py[cod]
+*$py.class
+.env
+.pytest_cache/
+.python-version
+
+# --- IDE & Editors ---
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# --- Project Specific (Knowledge Graph & Data) ---
+# Prevents uploading raw datasets or local DBs
+local_db/
+data/
+*.json
+*.xlsx
+*.log
+*.sqlite3
+
+# --- Build & Docker ---
+# Prevents uploading local build artifacts
+dist/
+build/
+*.egg-info/
+!.dockerignore
+
+# --- Streamlit Specific ---
+.streamlit/config.toml
+# Ignore the streamlit overhead if any
+static/
+!Dockerfile

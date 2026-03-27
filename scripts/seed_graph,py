@@ -1,0 +1,53 @@
+import random
+from neo4j import GraphDatabase
+
+# Use the credentials you set in your PowerShell earlier
+URI = "bolt://localhost:7687"
+AUTH = ("neo4j", "your-password") 
+
+def seed_booth_data(booth_id="B001"):
+    driver = GraphDatabase.driver(URI, auth=AUTH)
+    
+    names = ["Aarav", "Vivaan", "Aditya", "Ishani", "Saanvi", "Priya", "Arjun", "Rohan", "Sneha", "Ananya"]
+    surnames = ["Patil", "Gowda", "Desai", "Kulkarni", "Reddy", "Khan", "Sharma", "Mehta"]
+    sentiments = ["Positive", "Negative", "Neutral"]
+
+    with driver.session() as session:
+        # 1. Clear existing data for this booth (Be careful!)
+        session.run("MATCH (v:Voter {booth_id: $booth_id}) DETACH DELETE v", booth_id=booth_id)
+        
+        # 2. Create 100 Voters
+        voter_ids = []
+        for i in range(100):
+            full_name = f"{random.choice(names)} {random.choice(surnames)} {i}"
+            sentiment = random.choices(sentiments, weights=[40, 20, 40])[0]
+            
+            result = session.run("""
+                CREATE (v:Voter {
+                    id: $id, 
+                    name: $name, 
+                    booth_id: $booth_id, 
+                    sentiment: $sentiment,
+                    ward: 'Ward 12'
+                })
+                RETURN v.id as id
+            """, id=f"V{i}", name=full_name, booth_id=booth_id, sentiment=sentiment)
+            voter_ids.append(f"V{i}")
+
+        # 3. Create Random Relationships (The "Web")
+        for v_id in voter_ids:
+            # Connect to 1-2 random family members
+            targets = random.sample(voter_ids, 2)
+            for target in targets:
+                if v_id != target:
+                    rel_type = random.choice(["FAMILY_OF", "LIVES_NEAR"])
+                    session.run(f"""
+                        MATCH (a:Voter {{id: $v_id}}), (b:Voter {{id: $target}})
+                        MERGE (a)-[:{rel_type}]->(b)
+                    """, v_id=v_id, target=target)
+
+    driver.close()
+    print(f"Successfully seeded 100 voters into Booth {booth_id}!")
+
+if __name__ == "__main__":
+    seed_booth_data()

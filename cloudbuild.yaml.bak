@@ -1,0 +1,44 @@
+steps:
+  # --- STEP 1: Build & Deploy Backend ---
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/jansetu-backend', '-f', 'Dockerfile.backend', '.']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/jansetu-backend']
+
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'gcloud'
+    args:
+      - 'run'
+      - 'deploy'
+      - 'jansetu-backend'
+      - '--image'
+      - 'gcr.io/$PROJECT_ID/jansetu-backend'
+      - '--region'
+      - 'us-central1'
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'
+
+  # --- STEP 2: Build & Deploy Frontend ---
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/jansetu-frontend', '-f', 'Dockerfile.frontend', '.']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/jansetu-frontend']
+
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'gcloud'
+    args:
+      - 'run'
+      - 'deploy'
+      - 'jansetu-frontend'
+      - '--image'
+      - 'gcr.io/$PROJECT_ID/jansetu-frontend'
+      - '--region'
+      - 'us-central1'
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'
+      - '--set-env-vars'
+      - 'BACKEND_URL=https://jansetu-backend-your-id.a.run.app' # Replace after 1st deploy
