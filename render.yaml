@@ -6,6 +6,7 @@ services:
     dockerContext: .
     dockerfilePath: Dockerfile
     plan: free
+    healthCheckPath: /api/health
     envVars:
       - key: PORT
         value: 7000
@@ -17,7 +18,7 @@ services:
       - key: MEMGRAPH_PORT
         value: 7687
       - key: GEMINI_API_KEY
-        sync: false # Set this in the Render Dashboard during setup
+        sync: false
 
   # --- FRONTEND SERVICE ---
   - type: web
