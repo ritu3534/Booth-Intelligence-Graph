@@ -1,39 +1,25 @@
 services:
-  # --- BACKEND SERVICE ---
+  # --- BACKEND ---
   - type: web
     name: jansetu-backend
     env: docker
     dockerContext: .
     dockerfilePath: Dockerfile
     plan: free
-    healthCheckPath: /api/health
     envVars:
       - key: PORT
         value: 7000
       - key: MEMGRAPH_HOST
-        fromService:
-          type: web
-          name: jansetu-memgraph
-          property: host
+        value: jansetu-memgraph # Matches the name you gave in Step 1
       - key: MEMGRAPH_PORT
         value: 7687
       - key: GEMINI_API_KEY
         sync: false
 
-  # --- FRONTEND SERVICE ---
+  # --- FRONTEND ---
   - type: web
     name: jansetu-frontend
     env: docker
     dockerContext: .
     dockerfilePath: Dockerfile.frontend
     plan: free
-
-  # --- MEMGRAPH DATABASE ---
-  - type: web
-    name: jansetu-memgraph
-    env: docker
-    image: memgraph/memgraph-mage:latest
-    plan: free
-    ports:
-      - port: 7687
-        protocol: TCP
