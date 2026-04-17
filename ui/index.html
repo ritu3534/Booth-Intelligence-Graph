@@ -192,6 +192,32 @@ textarea.input{resize:vertical;}
 .seed-banner-text{font-size:13px;font-weight:600;color:var(--green);}
 .seed-banner-sub{font-size:11px;color:var(--text2);margin-top:2px;font-family:var(--mono);}
 
+/* RAG Chat */
+.rag-chat-wrap{display:flex;flex-direction:column;height:520px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;}
+.rag-messages{flex:1;overflow-y:auto;padding:1.25rem;display:flex;flex-direction:column;gap:12px;}
+.rag-msg{display:flex;gap:10px;animation:fadeUp .25s ease both;}
+.rag-msg.user{flex-direction:row-reverse;}
+.rag-avatar{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;}
+.rag-avatar.bot{background:linear-gradient(135deg,#1edb85,#3d9ef7);color:#060a12;font-weight:700;}
+.rag-avatar.user{background:var(--surface3);font-size:16px;}
+.rag-bubble{max-width:80%;padding:10px 14px;border-radius:12px;font-size:13px;line-height:1.6;}
+.rag-bubble.bot{background:var(--surface);border:1px solid var(--border2);color:var(--text);border-radius:4px 12px 12px 12px;}
+.rag-bubble.user{background:linear-gradient(135deg,#1edb8520,#3d9ef720);border:1px solid var(--green);color:var(--text);border-radius:12px 4px 12px 12px;text-align:right;}
+.rag-bubble .src-chips{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px;}
+.src-chip{font-size:9px;padding:2px 7px;border-radius:10px;background:var(--surface3);color:var(--text3);font-family:var(--mono);}
+.rag-input-row{padding:12px;border-top:1px solid var(--border);display:flex;gap:8px;}
+.rag-input-row .input{flex:1;height:40px;}
+.rag-typing{display:flex;align-items:center;gap:6px;padding:8px 14px;}
+.rag-typing-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:bounce .8s infinite;}
+.rag-typing-dot:nth-child(2){animation-delay:.15s;}
+.rag-typing-dot:nth-child(3){animation-delay:.3s;}
+@keyframes bounce{0%,80%,100%{transform:translateY(0);}40%{transform:translateY(-6px);}}
+.rag-status-bar{display:flex;align-items:center;gap:10px;padding:8px 14px;background:var(--surface);border-bottom:1px solid var(--border);flex-wrap:wrap;}
+.rag-stat-pill{font-size:10px;font-family:var(--mono);padding:3px 10px;border-radius:10px;background:var(--surface2);border:1px solid var(--border);color:var(--text3);}
+.rag-stat-pill.green{background:var(--green-dim);color:var(--green);border-color:var(--green);}
+.rag-quick{display:flex;flex-wrap:wrap;gap:6px;padding:0 14px 10px;}
+.rag-q-btn{font-size:11px;padding:4px 12px;border-radius:20px;border:1px solid var(--border2);background:transparent;color:var(--text2);cursor:pointer;font-family:var(--font);transition:all .15s;white-space:nowrap;}
+.rag-q-btn:hover{border-color:var(--green);color:var(--green);}
 /* Responsive */
 @media(max-width:960px){.shell{grid-template-columns:1fr;}.sidebar{display:none;}.metrics{grid-template-columns:repeat(2,1fr);}.row2{grid-template-columns:1fr;}.booth-grid{grid-template-columns:repeat(4,1fr);}.seg-grid{grid-template-columns:repeat(2,1fr);}.booth-stats{grid-template-columns:1fr;}}
 </style>
@@ -228,6 +254,10 @@ textarea.input{resize:vertical;}
     <button class="nav-item" onclick="showView('sentiment',this)"><span class="nav-icon">◉</span>Sentiment</button>
     <button class="nav-item" onclick="showView('aadhaar',this)"><span class="nav-icon">⊙</span>BLO Verify</button>
     <button class="nav-item" onclick="showView('workers',this)"><span class="nav-icon">★</span>Workers</button>
+  </nav>
+  <nav class="nav-group">
+    <div class="nav-label">AI Assistant</div>
+    <button class="nav-item" onclick="showView('rag',this)"><span class="nav-icon">🤖</span>JanSetu AI Chat <span class="nav-badge" style="background:var(--green-dim);color:var(--green)">RAG</span></button>
   </nav>
   <nav class="nav-group">
     <div class="nav-label">District Filter</div>
@@ -744,13 +774,100 @@ textarea.input{resize:vertical;}
     </div>
   </div>
 
+
+  <!-- RAG ASSISTANT VIEW -->
+  <div class="view" id="view-rag">
+    <div class="card" style="padding:0;overflow:hidden">
+      <div class="card-header" style="padding:1rem 1.25rem;border-bottom:1px solid var(--border);">
+        <div>
+          <div class="card-title">🤖 JanSetu AI Assistant — RAG</div>
+          <div style="font-size:10px;color:var(--text3);margin-top:3px;font-family:var(--mono)">Retrieval-Augmented Generation · ChromaDB + Gemini 1.5 Flash · Your data only</div>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-outline" style="font-size:11px;" onclick="ragCheckStatus()">⬡ Status</button>
+          <button class="btn btn-green" style="font-size:11px;" onclick="ragBuildIndex()">⚡ Build Index</button>
+        </div>
+      </div>
+
+      <!-- Status bar -->
+      <div class="rag-status-bar" id="rag-status-bar">
+        <span class="rag-stat-pill" id="rsp-docs">📄 Docs: —</span>
+        <span class="rag-stat-pill" id="rsp-schemes">📋 Schemes: —</span>
+        <span class="rag-stat-pill" id="rsp-booths">🏛️ Booths: —</span>
+        <span class="rag-stat-pill" id="rsp-indexed" style="margin-left:auto">⬡ Not indexed yet</span>
+      </div>
+
+      <!-- Quick questions -->
+      <div class="rag-quick" id="rag-quick-btns">
+        <button class="rag-q-btn" onclick="ragQuick('PM Kisan ke liye kaun eligible hai?')">🌾 PM Kisan eligibility</button>
+        <button class="rag-q-btn" onclick="ragQuick('B001 booth mein kitne floating voters hain?')">📊 B001 floating voters</button>
+        <button class="rag-q-btn" onclick="ragQuick('Ayushman Bharat ka benefit kaise milega?')">🏥 Ayushman Bharat</button>
+        <button class="rag-q-btn" onclick="ragQuick('Welfare gap kya hota hai?')">⚡ Welfare gap</button>
+        <button class="rag-q-btn" onclick="ragQuick('Ujjwala Yojana ke liye documents kya chahiye?')">📄 Ujjwala docs</button>
+        <button class="rag-q-btn" onclick="ragQuick('Which booth has highest risk?')">🔴 Highest risk booth</button>
+      </div>
+
+      <!-- Chat window -->
+      <div class="rag-chat-wrap">
+        <div class="rag-messages" id="rag-messages">
+          <div class="rag-msg">
+            <div class="rag-avatar bot">J</div>
+            <div class="rag-bubble bot">
+              <strong>Namaste! Main JanSetu AI hoon 🙏</strong><br><br>
+              Main aapke booth data, citizen records aur government schemes ke baare mein sawaal ka jawab de sakta hoon — <em>sirf aapke apne data se</em>.<br><br>
+              Pehle <strong>⚡ Build Index</strong> button dabao, phir koi bhi sawaal poochho Hindi ya English mein!
+            </div>
+          </div>
+        </div>
+        <div class="rag-input-row">
+          <input class="input" id="rag-input" type="text"
+            placeholder="Sawaal poochho… e.g. 'B003 mein kitne farmers hain?'"
+            onkeydown="if(event.key==='Enter')ragSend()"/>
+          <button class="btn btn-green" onclick="ragSend()" id="rag-send-btn">Send ↗</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- How it works card -->
+    <div class="row2">
+      <div class="card">
+        <div class="card-header"><div class="card-title">How RAG Works Here</div></div>
+        <div style="display:flex;flex-direction:column;gap:10px;font-size:12px;color:var(--text2);">
+          <div style="display:flex;gap:10px;align-items:flex-start;">
+            <div style="width:24px;height:24px;border-radius:50%;background:var(--green-dim);color:var(--green);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px;flex-shrink:0;">1</div>
+            <div><strong style="color:var(--text)">Index</strong> — Scheme descriptions + Booth CSV stats are embedded using <code style="color:var(--blue)">Gemini text-embedding-004</code> and stored in <code style="color:var(--blue)">ChromaDB</code> locally</div>
+          </div>
+          <div style="display:flex;gap:10px;align-items:flex-start;">
+            <div style="width:24px;height:24px;border-radius:50%;background:var(--green-dim);color:var(--green);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px;flex-shrink:0;">2</div>
+            <div><strong style="color:var(--text)">Retrieve</strong> — Your question is embedded, then <code style="color:var(--blue)">cosine similarity</code> finds the top-5 relevant chunks from your data</div>
+          </div>
+          <div style="display:flex;gap:10px;align-items:flex-start;">
+            <div style="width:24px;height:24px;border-radius:50%;background:var(--green-dim);color:var(--green);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px;flex-shrink:0;">3</div>
+            <div><strong style="color:var(--text)">Generate</strong> — <code style="color:var(--blue)">Gemini 1.5 Flash</code> gets your question + retrieved chunks as context → gives grounded answer</div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">What You Can Ask</div></div>
+        <div style="display:flex;flex-direction:column;gap:8px;font-size:12px;">
+          <div style="padding:8px 12px;background:var(--surface2);border-radius:8px;border-left:3px solid var(--green);">🌾 <strong>Scheme eligibility</strong> — "PM Kisan ke liye kaun eligible hai?"</div>
+          <div style="padding:8px 12px;background:var(--surface2);border-radius:8px;border-left:3px solid var(--blue);">📊 <strong>Booth stats</strong> — "B005 mein kitne committed voters hain?"</div>
+          <div style="padding:8px 12px;background:var(--surface2);border-radius:8px;border-left:3px solid var(--amber);">⚡ <strong>Welfare gap</strong> — "Low income farmers ke liye kaunsi schemes hain?"</div>
+          <div style="padding:8px 12px;background:var(--surface2);border-radius:8px;border-left:3px solid var(--purple);">📄 <strong>Documents</strong> — "Ayushman Bharat ke liye kya kya chahiye?"</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </main>
 </div>
 <div class="toast" id="toast"></div>
 
 <script>
-const API = 'http://127.0.0.1:7000';
-
+// Add this at the top of your script block in index.html
+const API = window.location.hostname === 'localhost' 
+    ? 'http://localhost:7000' 
+    : 'https://jansetu-backend-axzd.onrender.com/'; // Replace with your actual Render URL
 let schemeFilter='all', districtFilter='all', allSchemes=[], nudgeCount=0, allGalis=[], activeSegment=null, allBooths=[];
 
 function toast(msg, color='var(--green)'){
@@ -1908,6 +2025,155 @@ function viewWorkerBooth(boothId){
 loadDistricts();
 loadAll();
 checkHealth();
+
+/* ── RAG Assistant ─────────────────────────────────────────────────────── */
+async function ragCheckStatus(){
+  try{
+    const d = await fetch(`${API}/api/rag/status`).then(r=>r.json());
+    ragUpdateStatus(d);
+    if(d.indexed){
+      toast(`Index ready — ${d.total_docs} docs indexed`,'var(--green)');
+    } else {
+      toast('Not indexed yet — click ⚡ Build Index','var(--amber)');
+    }
+  }catch(e){ toast('RAG status check failed: '+e.message,'var(--red)'); }
+}
+
+async function ragBuildIndex(){
+  const btn = document.querySelector('button[onclick="ragBuildIndex()"]');
+  btn.textContent = '⏳ Indexing…'; btn.disabled = true;
+  ragAddMessage('bot','⚡ Building vector index — embedding schemes + booth data + general context…\n\nThis may take 30-60 seconds…');
+  try{
+    const d = await fetch(`${API}/api/rag/index`,{method:'POST'}).then(r=>r.json());
+    if(d.error){ throw new Error(d.error); }
+    ragUpdateStatus(d);
+    ragAddMessage('bot',
+      `✅ Index built successfully!\n\n📄 **${d.total_docs} documents** indexed:\n` +
+      `• 📋 Schemes: ${d.sources?.schemes||0}\n` +
+      `• 🏛️ Booths: ${d.sources?.booths||0}\n` +
+      `• ℹ️ General: ${d.sources?.general||0}\n\n` +
+      `Ab aap koi bhi sawaal poochh sakte hain! 🎉`
+    );
+    toast(`✅ Indexed ${d.total_docs} docs`,'var(--green)');
+  }catch(e){
+    ragAddMessage('bot','❌ Indexing failed: '+e.message+'\n\nMake sure dashboard.py is running and GEMINI_API_KEY is set.');
+    toast('Indexing failed','var(--red)');
+  }finally{
+    btn.textContent = '⚡ Build Index'; btn.disabled = false;
+  }
+}
+
+async function ragSend(){
+  const input = document.getElementById('rag-input');
+  const q = input.value.trim();
+  if(!q) return;
+  input.value = '';
+
+  // Show user message
+  ragAddMessage('user', q);
+
+  // Show typing indicator
+  const typingId = ragShowTyping();
+
+  // Disable send
+  const sendBtn = document.getElementById('rag-send-btn');
+  sendBtn.disabled = true;
+
+  try{
+    const resp = await fetch(`${API}/api/rag/query`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({question: q, top_k: 5})
+    });
+    const d = await resp.json();
+
+    // Remove typing indicator
+    document.getElementById(typingId)?.remove();
+
+    if(!resp.ok){ throw new Error(d.detail||'Query failed'); }
+
+    // Build answer with source chips
+    const srcChips = (d.retrieved_chunks||[]).map(c=>
+      `<span class="src-chip">${c.source} · ${Math.round(c.relevance*100)}%</span>`
+    ).join('');
+
+    ragAddMessage('bot', d.answer, srcChips);
+
+  }catch(e){
+    document.getElementById(typingId)?.remove();
+    ragAddMessage('bot','❌ Error: '+e.message+'\n\nKya index build kiya? ⚡ Build Index button try karo.');
+  }finally{
+    sendBtn.disabled = false;
+    input.focus();
+  }
+}
+
+function ragQuick(q){
+  document.getElementById('rag-input').value = q;
+  ragSend();
+}
+
+function ragAddMessage(role, text, srcChipsHtml=''){
+  const container = document.getElementById('rag-messages');
+
+  // Format text — convert **bold**, newlines
+  const formatted = text
+    .replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')
+    .replace(/\n/g,'<br>');
+
+  const avatar = role==='bot'
+    ? `<div class="rag-avatar bot">J</div>`
+    : `<div class="rag-avatar user">👤</div>`;
+
+  const srcs = srcChipsHtml
+    ? `<div class="src-chips">${srcChipsHtml}</div>` : '';
+
+  const div = document.createElement('div');
+  div.className = `rag-msg ${role}`;
+  div.innerHTML = `${role==='bot'?avatar:''}
+    <div class="rag-bubble ${role}">${formatted}${srcs}</div>
+    ${role==='user'?avatar:''}`;
+
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+
+function ragShowTyping(){
+  const container = document.getElementById('rag-messages');
+  const id = 'typing-'+Date.now();
+  const div = document.createElement('div');
+  div.className = 'rag-msg';
+  div.id = id;
+  div.innerHTML = `<div class="rag-avatar bot">J</div>
+    <div class="rag-bubble bot">
+      <div class="rag-typing">
+        <div class="rag-typing-dot"></div>
+        <div class="rag-typing-dot"></div>
+        <div class="rag-typing-dot"></div>
+        <span style="font-size:11px;color:var(--text3);margin-left:4px">Retrieving &amp; generating…</span>
+      </div>
+    </div>`;
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+  return id;
+}
+
+function ragUpdateStatus(d){
+  const idxEl = document.getElementById('rsp-indexed');
+  document.getElementById('rsp-docs').textContent    = `📄 Docs: ${d.total_docs||0}`;
+  document.getElementById('rsp-schemes').textContent = `📋 Schemes: ${d.sources?.schemes||0}`;
+  document.getElementById('rsp-booths').textContent  = `🏛️ Booths: ${d.sources?.booths||0}`;
+  if(d.indexed){
+    idxEl.textContent = `✅ Indexed (${d.vector_count||d.total_docs||0} vectors)`;
+    idxEl.className = 'rag-stat-pill green';
+  } else {
+    idxEl.textContent = '⬡ Not indexed yet';
+    idxEl.className = 'rag-stat-pill';
+  }
+}
+
+// Auto-check RAG status on load
+setTimeout(ragCheckStatus, 2000);
 </script>
 <script src="/ui/script.js"></script>
 </body>

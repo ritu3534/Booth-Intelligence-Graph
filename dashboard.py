@@ -1702,6 +1702,321 @@ def constituency_sentiment(district: str = Query("all")):
 
 
 # ══════════════════════════════════════════════════════════════════════════════
+# RANDOM FOREST — Objective 6  (Welfare-Gap Risk Prediction)
+# ══════════════════════════════════════════════════════════════════════════════
+#
+#  Features (from voters_data.csv):
+#    age, monthly_income, land_holding_acres, pension_amount,
+#    gender, caste_category, occupation,
+#    aadhaar_linked, has_lpg, has_bank_account, has_pucca_house,
+#    is_income_taxpayer, ration_card, loan_defaulter, is_floating_node
+#
+#  Target  :  is_floating = 1  if is_floating_node == True  else  0
+#             (undecided / swing voter — the key political intelligence signal)
+# ══════════════════════════════════════════════════════════════════════════════
+
+import io
+import threading
+import pandas as pd
+import numpy as np
+
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.preprocessing import LabelEncoder
+from sklearn.model_selection import StratifiedShuffleSplit
+from sklearn.metrics import (
+    accuracy_score, f1_score, roc_auc_score, classification_report
+)
+
+# ── In-memory model store ─────────────────────────────────────────────────────
+_rf_model: Optional[RandomForestClassifier] = None
+_rf_feature_names: List[str] = []
+_rf_label_encoders: Dict[str, LabelEncoder] = {}
+_rf_lock = threading.Lock()
+_rf_train_report: dict = {}
+
+CSV_PATH = Path("voters_data.csv")
+
+# Categorical columns that need label-encoding
+_CAT_COLS = ["gender", "caste_category", "occupation", "urban_rural", "education_level", "primary_news_source"]
+# Boolean columns stored as "True"/"False" strings
+_BOOL_COLS = [
+    "aadhaar_linked", "has_lpg", "has_bank_account",
+    "has_pucca_house", "is_income_taxpayer", "ration_card",
+    "loan_defaulter", "is_floating_node",
+]
+# Numeric columns — includes new high-signal engagement/satisfaction features
+_NUM_COLS = [
+    "age", "monthly_income", "land_holding_acres", "pension_amount",
+    "votes_last_3_elections", "govt_satisfaction", "scheme_satisfaction",
+]
+
+
+def _bool_to_int(val) -> int:
+    if isinstance(val, bool):
+        return int(val)
+    return 1 if str(val).strip().lower() in ("true", "1", "yes") else 0
+
+
+def _load_and_preprocess() -> tuple[pd.DataFrame, pd.Series]:
+    """Load voters_data.csv and return (X, y)."""
+    df = pd.read_csv(CSV_PATH, encoding="utf-8-sig")
+
+    # Target: is_floating_node → 1 (swing/undecided voter), 0 (committed)
+    target_series = df["is_floating_node"].apply(_bool_to_int)
+
+    # Encode booleans (is_floating_node excluded — it is the target)
+    feature_bool_cols = [c for c in _BOOL_COLS if c != "is_floating_node"]
+    for col in feature_bool_cols:
+        df[col] = df[col].apply(_bool_to_int)
+
+    # Encode numerics (fill missing with 0 for backward compat with old CSVs)
+    for col in _NUM_COLS:
+        if col in df.columns:
+            df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0)
+        else:
+            df[col] = 0  # old CSV without new columns — default to 0
+
+    # Label-encode categoricals — rebuild encoders each time
+    global _rf_label_encoders
+    _rf_label_encoders = {}
+    for col in _CAT_COLS:
+        if col in df.columns:
+            le = LabelEncoder()
+            df[col] = le.fit_transform(df[col].astype(str))
+            _rf_label_encoders[col] = le
+        else:
+            df[col] = 0  # old CSV backward compat
+
+    feature_cols = _NUM_COLS + feature_bool_cols + _CAT_COLS
+    X = df[feature_cols].values
+    y = target_series.values
+    return X, y, feature_cols
+
+
+# ── API: Train ────────────────────────────────────────────────────────────────
+class RFTrainRequest(BaseModel):
+    n_estimators: int = 200
+    max_depth: Optional[int] = None
+    min_samples_leaf: int = 2
+    test_size: float = 0.2
+
+
+@app.post("/api/ml/train", tags=["ML"])
+def train_rf(req: RFTrainRequest = None):
+    """Train (or retrain) the Random Forest model from voters_data.csv."""
+    global _rf_model, _rf_feature_names, _rf_train_report
+
+    if req is None:
+        req = RFTrainRequest()
+
+    if not CSV_PATH.exists():
+        raise HTTPException(status_code=404, detail="voters_data.csv not found. Run /api/admin/seed first.")
+
+    try:
+        X, y, feature_cols = _load_and_preprocess()
+
+        # Stratified train/test split
+        sss = StratifiedShuffleSplit(n_splits=1, test_size=req.test_size, random_state=42)
+        for train_idx, test_idx in sss.split(X, y):
+            X_train, X_test = X[train_idx], X[test_idx]
+            y_train, y_test = y[train_idx], y[test_idx]
+
+        clf = RandomForestClassifier(
+            n_estimators=req.n_estimators,
+            max_depth=req.max_depth,
+            min_samples_leaf=req.min_samples_leaf,
+            class_weight="balanced",
+            random_state=42,
+            n_jobs=-1,
+        )
+        clf.fit(X_train, y_train)
+
+        y_pred = clf.predict(X_test)
+        y_prob = clf.predict_proba(X_test)[:, 1]
+
+        report = {
+            "accuracy":  round(accuracy_score(y_test, y_pred), 4),
+            "f1_score":  round(f1_score(y_test, y_pred, zero_division=0), 4),
+            "roc_auc":   round(roc_auc_score(y_test, y_prob), 4),
+            "train_size": int(len(X_train)),
+            "test_size":  int(len(X_test)),
+            "n_estimators": req.n_estimators,
+            "target": "is_floating_node",
+            "class_balance": {
+                "floating": int(y.sum()),
+                "committed": int((y == 0).sum()),
+            },
+            "feature_importances": [
+                {"feature": feat, "importance": round(float(imp), 4)}
+                for feat, imp in sorted(
+                    zip(feature_cols, clf.feature_importances_),
+                    key=lambda x: x[1], reverse=True
+                )
+            ],
+        }
+
+        with _rf_lock:
+            _rf_model = clf
+            _rf_feature_names = feature_cols
+            _rf_train_report = report
+
+        log.info("RF trained — acc=%.4f  f1=%.4f  auc=%.4f", report["accuracy"], report["f1_score"], report["roc_auc"])
+        return {"status": "trained", **report}
+
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+# ── API: Predict single citizen ───────────────────────────────────────────────
+class CitizenFeatures(BaseModel):
+    age: float = 30
+    monthly_income: float = 10000
+    land_holding_acres: float = 0.0
+    pension_amount: float = 0.0
+    gender: str = "Male"
+    caste_category: str = "General"
+    occupation: str = "Farmer"
+    aadhaar_linked: bool = True
+    has_lpg: bool = False
+    has_bank_account: bool = True
+    has_pucca_house: bool = False
+    is_income_taxpayer: bool = False
+    ration_card: bool = True
+    loan_defaulter: bool = False
+    is_floating_node: bool = False
+
+
+@app.post("/api/ml/predict", tags=["ML"])
+def predict_risk(features: CitizenFeatures):
+    """Predict welfare-gap risk probability for a single citizen."""
+    with _rf_lock:
+        model = _rf_model
+        feat_names = _rf_feature_names
+        encoders = dict(_rf_label_encoders)
+
+    if model is None:
+        raise HTTPException(status_code=503, detail="Model not trained yet. POST /api/ml/train first.")
+
+    try:
+        row = {}
+        for col in _NUM_COLS:
+            row[col] = float(getattr(features, col))
+        for col in _BOOL_COLS:
+            row[col] = _bool_to_int(getattr(features, col))
+        for col in _CAT_COLS:
+            val = str(getattr(features, col))
+            le = encoders.get(col)
+            if le:
+                try:
+                    row[col] = int(le.transform([val])[0])
+                except ValueError:
+                    row[col] = 0   # unseen category → default 0
+            else:
+                row[col] = 0
+
+        X_in = np.array([[row[f] for f in feat_names]])
+        prob = float(model.predict_proba(X_in)[0][1])
+        label = "floating" if prob >= 0.5 else "committed"
+
+        # Top 3 feature importances as explanation
+        importances = model.feature_importances_
+        top3 = sorted(zip(feat_names, importances), key=lambda x: x[1], reverse=True)[:3]
+
+        return {
+            "float_probability": round(prob, 4),
+            "label": label,
+            "top_drivers": [{"feature": f, "importance": round(float(i), 4)} for f, i in top3],
+        }
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+# ── API: Booth-level risk aggregation ────────────────────────────────────────
+@app.get("/api/ml/booth-risk", tags=["ML"])
+def booth_risk(district: str = Query("all")):
+    """
+    Score ALL citizens in voters_data.csv with the trained RF model,
+    then aggregate by booth → avg_risk, high_risk_count, total_citizens.
+    """
+    with _rf_lock:
+        model = _rf_model
+        feat_names = _rf_feature_names
+        encoders = dict(_rf_label_encoders)
+
+    if model is None:
+        raise HTTPException(status_code=503, detail="Model not trained yet. POST /api/ml/train first.")
+
+    if not CSV_PATH.exists():
+        raise HTTPException(status_code=404, detail="voters_data.csv not found.")
+
+    try:
+        df = pd.read_csv(CSV_PATH, encoding="utf-8-sig")
+
+        if district != "all":
+            df = df[df["district"] == district]
+
+        # Preprocess (same pipeline as training; exclude is_floating_node — it's the target)
+        feature_bool_cols = [c for c in _BOOL_COLS if c != "is_floating_node"]
+        for col in feature_bool_cols:
+            df[col] = df[col].apply(_bool_to_int)
+        for col in _NUM_COLS:
+            df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0)
+        for col in _CAT_COLS:
+            le = encoders.get(col)
+            if le:
+                df[col] = df[col].astype(str).apply(
+                    lambda v: int(le.transform([v])[0]) if v in le.classes_ else 0
+                )
+            else:
+                df[col] = 0
+
+        X = df[feat_names].values
+        probs = model.predict_proba(X)[:, 1]
+        df["risk_prob"] = probs
+
+        agg = (
+            df.groupby(["booth_id", "district"])
+            .agg(
+                avg_risk=("risk_prob", "mean"),
+                high_risk_count=("risk_prob", lambda s: int((s >= 0.5).sum())),
+                total_citizens=("risk_prob", "count"),
+            )
+            .reset_index()
+        )
+
+        booths = []
+        for _, r in agg.iterrows():
+            booths.append({
+                "booth_id":          r["booth_id"],
+                "district":          r["district"],
+                "avg_float_risk":    round(float(r["avg_risk"]), 4),
+                "high_risk_count":   int(r["high_risk_count"]),
+                "total_citizens":    int(r["total_citizens"]),
+                "float_pct":         round(100.0 * r["high_risk_count"] / max(r["total_citizens"], 1), 1),
+            })
+
+        booths.sort(key=lambda x: x["avg_float_risk"], reverse=True)
+        return {"booths": booths, "model_auc": _rf_train_report.get("roc_auc", None)}
+
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+# ── API: Global feature insights ─────────────────────────────────────────────
+@app.get("/api/ml/insights", tags=["ML"])
+def rf_insights():
+    """Return training report + feature importances for dashboard display."""
+    with _rf_lock:
+        report = dict(_rf_train_report)
+        model = _rf_model
+
+    if model is None:
+        raise HTTPException(status_code=503, detail="Model not trained yet. POST /api/ml/train first.")
+
+    return report
+
+
+# ══════════════════════════════════════════════════════════════════════════════
 # SEED — demo/hackathon convenience
 # ══════════════════════════════════════════════════════════════════════════════
 
@@ -2007,6 +2322,97 @@ async def seed_from_csv():
         "workers":  len(counts["workers"]),
         "message":  "Graph seeded from voters_data.csv",
     }
+# ══════════════════════════════════════════════════════════════════════════════
+# RAG — Retrieval-Augmented Generation  (Objective 7)
+# ══════════════════════════════════════════════════════════════════════════════
+#
+#  Pipeline:
+#    User Question → Gemini Embedding → ChromaDB similarity search
+#    → Top-K chunks retrieved → Gemini 1.5 Flash generates grounded answer
+#
+#  Data indexed:
+#    • scheme_knowledge.json   (10 government schemes, bilingual)
+#    • voters_data.csv         (per-booth citizen statistics)
+#    • General JanSetu context (welfare gap, floating voter definitions)
+# ══════════════════════════════════════════════════════════════════════════════
+
+try:
+    import rag_engine as _rag
+    _RAG_AVAILABLE = True
+    log.info("RAG engine loaded successfully")
+except ImportError as _rag_err:
+    _RAG_AVAILABLE = False
+    log.warning("RAG engine not available: %s", _rag_err)
+
+
+class RAGQueryRequest(BaseModel):
+    question: str
+    top_k: int = 5
+
+
+@app.post("/api/rag/index", tags=["RAG"])
+def rag_index():
+    """
+    Build (or rebuild) the ChromaDB vector index.
+    Indexes scheme knowledge + booth CSV data + general context.
+    Call this once after seeding, or whenever data changes.
+    """
+    if not _RAG_AVAILABLE:
+        raise HTTPException(status_code=503, detail="RAG engine not available. Install: pip install chromadb langchain-google-genai")
+    if not GEMINI_API_KEY:
+        raise HTTPException(status_code=503, detail="GEMINI_API_KEY not set in .env")
+    try:
+        stats = _rag.build_index()
+        return {"status": "indexed", **stats}
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@app.post("/api/rag/query", tags=["RAG"])
+def rag_query(req: RAGQueryRequest):
+    """
+    Ask any question about your booth/citizen/scheme data.
+    Returns a Gemini-generated answer grounded in your actual data.
+
+    Example questions:
+      - 'PM Kisan ke liye kaun eligible hai?'
+      - 'B001 booth mein kitne floating voters hain?'
+      - 'Welfare gap kya hota hai?'
+      - 'Low income farmers ke liye kaunsi schemes hain?'
+    """
+    if not _RAG_AVAILABLE:
+        raise HTTPException(status_code=503, detail="RAG engine not available.")
+    if not GEMINI_API_KEY:
+        raise HTTPException(status_code=503, detail="GEMINI_API_KEY not set in .env")
+    if not req.question or len(req.question.strip()) < 3:
+        raise HTTPException(status_code=400, detail="Question too short")
+    try:
+        chunks  = _rag.retrieve(req.question, k=req.top_k)
+        answer  = _rag.generate_answer(req.question, chunks)
+        return {
+            "question":        req.question,
+            "answer":          answer,
+            "sources_used":    len(chunks),
+            "retrieved_chunks": [
+                {"source": c["source"], "relevance": c["relevance"]}
+                for c in chunks
+            ],
+        }
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@app.get("/api/rag/status", tags=["RAG"])
+def rag_status():
+    """Check RAG index status — how many docs are indexed."""
+    if not _RAG_AVAILABLE:
+        return {"available": False, "reason": "chromadb not installed"}
+    try:
+        return {"available": True, **_rag.get_status()}
+    except Exception as exc:
+        return {"available": True, "error": str(exc)}
+
+
 # ══════════════════════════════════════════════════════════════════════════════
 if __name__ == "__main__":
     import uvicorn

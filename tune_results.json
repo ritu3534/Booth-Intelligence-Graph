@@ -1,0 +1,198 @@
+{
+  "baseline": {
+    "accuracy": 0.54,
+    "f1_score": 0.549,
+    "roc_auc": 0.5208
+  },
+  "tuned": {
+    "accuracy": 0.55,
+    "f1_score": 0.5714,
+    "roc_auc": 0.56
+  },
+  "improvement": {
+    "accuracy": 1.0,
+    "f1_score": 0.0224,
+    "roc_auc": 0.0392
+  },
+  "best_params": {
+    "n_estimators": 500,
+    "min_samples_split": 10,
+    "min_samples_leaf": 1,
+    "max_features": 0.7,
+    "max_depth": 30,
+    "criterion": "entropy",
+    "class_weight": "balanced_subsample",
+    "bootstrap": false
+  },
+  "cv_best_auc": 0.5054,
+  "search_time_seconds": 57.6,
+  "n_candidates": 50,
+  "cv_folds": 5,
+  "total_fits": 250,
+  "class_balance": {
+    "floating": 248,
+    "committed": 252
+  },
+  "train_size": 400,
+  "test_size": 100,
+  "feature_importances": [
+    {
+      "feature": "monthly_income",
+      "importance": 0.2761
+    },
+    {
+      "feature": "age",
+      "importance": 0.2488
+    },
+    {
+      "feature": "land_holding_acres",
+      "importance": 0.201
+    },
+    {
+      "feature": "occupation",
+      "importance": 0.0726
+    },
+    {
+      "feature": "caste_category",
+      "importance": 0.0573
+    },
+    {
+      "feature": "aadhaar_linked",
+      "importance": 0.0525
+    },
+    {
+      "feature": "gender",
+      "importance": 0.0332
+    },
+    {
+      "feature": "has_lpg",
+      "importance": 0.0258
+    },
+    {
+      "feature": "has_pucca_house",
+      "importance": 0.0195
+    },
+    {
+      "feature": "is_income_taxpayer",
+      "importance": 0.0079
+    },
+    {
+      "feature": "pension_amount",
+      "importance": 0.0052
+    },
+    {
+      "feature": "has_bank_account",
+      "importance": 0.0
+    },
+    {
+      "feature": "ration_card",
+      "importance": 0.0
+    },
+    {
+      "feature": "loan_defaulter",
+      "importance": 0.0
+    }
+  ],
+  "classification_report": {
+    "committed": {
+      "precision": 0.5555555555555556,
+      "recall": 0.5,
+      "f1-score": 0.5263157894736842,
+      "support": 50.0
+    },
+    "floating": {
+      "precision": 0.5454545454545454,
+      "recall": 0.6,
+      "f1-score": 0.5714285714285714,
+      "support": 50.0
+    },
+    "accuracy": 0.55,
+    "macro avg": {
+      "precision": 0.5505050505050505,
+      "recall": 0.55,
+      "f1-score": 0.5488721804511278,
+      "support": 100.0
+    },
+    "weighted avg": {
+      "precision": 0.5505050505050505,
+      "recall": 0.55,
+      "f1-score": 0.5488721804511277,
+      "support": 100.0
+    }
+  },
+  "api_retrain": {
+    "success": true,
+    "result": {
+      "status": "trained",
+      "accuracy": 0.52,
+      "f1_score": 0.52,
+      "roc_auc": 0.501,
+      "train_size": 400,
+      "test_size": 100,
+      "n_estimators": 500,
+      "target": "is_floating_node",
+      "class_balance": {
+        "floating": 248,
+        "committed": 252
+      },
+      "feature_importances": [
+        {
+          "feature": "monthly_income",
+          "importance": 0.2267
+        },
+        {
+          "feature": "age",
+          "importance": 0.2072
+        },
+        {
+          "feature": "land_holding_acres",
+          "importance": 0.2054
+        },
+        {
+          "feature": "occupation",
+          "importance": 0.0866
+        },
+        {
+          "feature": "caste_category",
+          "importance": 0.0805
+        },
+        {
+          "feature": "aadhaar_linked",
+          "importance": 0.0401
+        },
+        {
+          "feature": "has_lpg",
+          "importance": 0.038
+        },
+        {
+          "feature": "has_pucca_house",
+          "importance": 0.0374
+        },
+        {
+          "feature": "gender",
+          "importance": 0.0365
+        },
+        {
+          "feature": "is_income_taxpayer",
+          "importance": 0.0259
+        },
+        {
+          "feature": "pension_amount",
+          "importance": 0.0158
+        },
+        {
+          "feature": "has_bank_account",
+          "importance": 0.0
+        },
+        {
+          "feature": "ration_card",
+          "importance": 0.0
+        },
+        {
+          "feature": "loan_defaulter",
+          "importance": 0.0
+        }
+      ]
+    }
+  }
+}

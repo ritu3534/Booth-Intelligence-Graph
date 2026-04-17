@@ -1,0 +1,143 @@
+{
+  "schemes": [
+    {
+      "name": "PM-Kisan Samman Nidhi",
+      "short_name": "PM-Kisan",
+      "category": "Agriculture",
+      "ministry": "Ministry of Agriculture & Farmers Welfare",
+      "benefit": "Rs. 6000 per year (3 installments of Rs. 2000) directly in bank account",
+      "eligibility": "Small and marginal farmers with land holding up to 2 hectares. Must be Indian citizen. Aadhaar card and bank account mandatory.",
+      "not_eligible": "Income taxpayers, government employees, pensioners above Rs. 10000/month, constitutional post holders",
+      "how_to_apply": "Nearest Common Service Centre (CSC), PM-Kisan portal pmkisan.gov.in, or through local Patwari/Revenue officer",
+      "documents": ["Aadhaar Card", "Bank passbook", "Land records (Khasra/Khatauni)", "Mobile number"],
+      "keywords": ["farmer", "kisan", "kisaan", "agriculture", "land", "krishi", "6000", "installment"],
+      "hindi_summary": "PM Kisan yojana mein chote aur marginal kisanon ko har saal Rs. 6000 teen installments mein milte hain. Seedha bank mein aate hain. Aadhaar aur bank account zaroori hai."
+    },
+    {
+      "name": "Ayushman Bharat Pradhan Mantri Jan Arogya Yojana",
+      "short_name": "Ayushman Bharat",
+      "category": "Health",
+      "ministry": "Ministry of Health & Family Welfare",
+      "benefit": "Rs. 5 lakh per family per year health insurance for secondary and tertiary hospitalisation",
+      "eligibility": "Families listed in SECC 2011 database. BPL families. Annual income below Rs. 1 lakh. SC/ST households automatically eligible.",
+      "not_eligible": "Families with government jobs, motorized vehicle, farmers with 5+ acres land, income tax payers",
+      "how_to_apply": "Visit nearest empanelled hospital with Aadhaar card. Ayushman Mitra at hospital helps. pmjay.gov.in website or 14555 helpline.",
+      "documents": ["Aadhaar Card", "Ration Card", "SECC family ID if available"],
+      "keywords": ["health", "hospital", "bimari", "insurance", "5 lakh", "ayushman", "medical", "treatment", "sehat"],
+      "hindi_summary": "Ayushman Bharat mein garib pariwaaron ko 5 lakh rupaye tak ka free ilaaj milta hai. Empanelled hospital mein Aadhaar lekar jaao, Ayushman Mitra madad karta hai."
+    },
+    {
+      "name": "Pradhan Mantri Ujjwala Yojana",
+      "short_name": "Ujjwala Yojana",
+      "category": "Energy / Women Welfare",
+      "ministry": "Ministry of Petroleum & Natural Gas",
+      "benefit": "Free LPG connection (cylinder + stove). First refill subsidised. Women empowerment through clean cooking fuel.",
+      "eligibility": "Women aged 18+ from BPL households. No existing LPG connection at home. Must be on SECC 2011 list or BPL ration card holder.",
+      "not_eligible": "Households already having LPG connection. APL ration card holders without BPL status.",
+      "how_to_apply": "Nearest LPG distributor (HP Gas, Bharat Gas, Indane). KYC form + documents submit karo.",
+      "documents": ["Aadhaar Card", "BPL Ration Card", "Bank passbook", "Passport size photo"],
+      "keywords": ["LPG", "gas", "cylinder", "mahila", "women", "ujjwala", "cooking", "chulha", "stove", "BPL"],
+      "hindi_summary": "Ujjwala Yojana BPL mahilaon ko free LPG connection deti hai. Nearest gas distributor pe jaake KYC form bharo. Aadhaar aur BPL ration card chahiye."
+    },
+    {
+      "name": "Pradhan Mantri Awas Yojana - Gramin",
+      "short_name": "PM Awas Yojana",
+      "category": "Housing",
+      "ministry": "Ministry of Rural Development",
+      "benefit": "Rs. 1.20 lakh (plain areas) or Rs. 1.30 lakh (hilly/NE areas) for construction of pucca house. Payment in 3 installments.",
+      "eligibility": "Homeless families or those living in kutcha/dilapidated houses. Listed in SECC 2011. SC/ST, minorities, widows, disabled persons given priority.",
+      "not_eligible": "Persons already owning a pucca house anywhere in India. Income tax payers. Persons with more than 2.5 acres irrigated land.",
+      "how_to_apply": "Through Gram Panchayat or Block Development Officer (BDO). AwaasSoft portal. Awas App on mobile.",
+      "documents": ["Aadhaar Card", "Job Card (MGNREGA)", "Bank passbook", "SECC ID if available"],
+      "keywords": ["house", "ghar", "makaan", "pucca", "awas", "housing", "construction", "kutcha", "BPL"],
+      "hindi_summary": "PMAY-G mein kutche ghar mein rehne walon ko pucca ghar banane ke liye 1.20 lakh milta hai. Gram Panchayat ya BDO se apply karo. SECC 2011 mein naam hona chahiye."
+    },
+    {
+      "name": "Post-Matric Scholarship for SC/ST/OBC",
+      "short_name": "Post-Matric Scholarship",
+      "category": "Education",
+      "ministry": "Ministry of Social Justice & Empowerment",
+      "benefit": "Full tuition fee reimbursement + maintenance allowance (Rs. 380 to Rs. 1200/month depending on course and hostel status)",
+      "eligibility": "SC/ST/OBC students studying post-matric (Class 11 onwards). Annual family income below Rs. 2.5 lakh for OBC, Rs. 2 lakh for SC/ST.",
+      "not_eligible": "Students already availing another scholarship. Correspondence/distance courses sometimes excluded.",
+      "how_to_apply": "National Scholarship Portal scholarships.gov.in via school/college. State social welfare department.",
+      "documents": ["Aadhaar Card", "Caste Certificate", "Income Certificate", "Marksheet", "Bank passbook", "Admission proof"],
+      "keywords": ["scholarship", "student", "padhai", "education", "SC", "ST", "OBC", "college", "fee", "chaatra", "vidyarthi"],
+      "hindi_summary": "SC/ST/OBC students ko 11th ke baad scholarship milti hai. Poorni fees + pocket money. Scholarships.gov.in pe apply karo. Income 2.5 lakh se kam honi chahiye."
+    },
+    {
+      "name": "National Social Assistance Programme - Old Age Pension",
+      "short_name": "Old Age Pension",
+      "category": "Social Security",
+      "ministry": "Ministry of Rural Development",
+      "benefit": "Rs. 200 to Rs. 500 per month from Centre + state top-up (Karnataka mein Rs. 400 extra = total ~Rs. 600-900/month)",
+      "eligibility": "Age 60 years or above. BPL household. No other significant source of income or government pension.",
+      "not_eligible": "Persons receiving any other government pension. Persons with income above BPL threshold.",
+      "how_to_apply": "Gram Panchayat ya Ward Office mein application. District Social Welfare Office.",
+      "documents": ["Aadhaar Card", "Age proof (birth certificate/school leaving certificate)", "BPL ration card", "Bank passbook"],
+      "keywords": ["old age", "pension", "bujurg", "vridha", "elderly", "60 years", "umar", "retired", "senior citizen", "pension"],
+      "hindi_summary": "60 saal se upar BPL bujurgon ko har mahine pension milti hai. Karnataka mein combined 600-900 rupaye tak. Gram Panchayat mein apply karo."
+    },
+    {
+      "name": "Pradhan Mantri MUDRA Yojana",
+      "short_name": "Mudra Loan (PMMY)",
+      "category": "Business / Self Employment",
+      "ministry": "Ministry of Finance",
+      "benefit": "Collateral-free business loans: Shishu (up to Rs. 50,000), Kishor (Rs. 50,000 to 5 lakh), Tarun (Rs. 5 lakh to 10 lakh)",
+      "eligibility": "Non-farm small/micro enterprises. Street vendors, shopkeepers, artisans, small traders. No defaulters. Aadhaar mandatory.",
+      "not_eligible": "Loan defaulters. Agricultural activities (PM-Kisan covers them). Large enterprises.",
+      "how_to_apply": "Any bank, NBFC, or MFI. Mudra portal udyamimitra.in. No collateral required.",
+      "documents": ["Aadhaar Card", "Business proof/address", "Bank statement 6 months", "Quotation for equipment if applicable"],
+      "keywords": ["loan", "business", "udyog", "trade", "mudra", "shop", "dukan", "self employed", "entrepreneur", "50000", "5 lakh"],
+      "hindi_summary": "MUDRA mein chote business ke liye bina guarantor ke loan milta hai. Rs. 50,000 se Rs. 10 lakh tak. Kisi bhi bank mein jaake apply kar sakte hain."
+    },
+    {
+      "name": "Divyang Sahara Yojana (Disability Pension)",
+      "short_name": "Divyang Sahara Yojna",
+      "category": "Disability Welfare",
+      "ministry": "Ministry of Social Justice & Empowerment",
+      "benefit": "Monthly pension Rs. 500 to Rs. 1500. Assistive devices. Educational scholarships for disabled children.",
+      "eligibility": "Persons with 40%+ disability certified by medical board. BPL household. Age 18+.",
+      "not_eligible": "Persons with disability less than 40%. Persons receiving other disability benefits from state/centre.",
+      "how_to_apply": "District Social Welfare Department. Disability certificate from government hospital medical board first.",
+      "documents": ["Aadhaar Card", "Disability Certificate (40%+)", "BPL ration card", "Bank passbook", "Photo"],
+      "keywords": ["disabled", "divyang", "disability", "handicap", "viklaang", "pension", "certificate", "40%"],
+      "hindi_summary": "40% ya zyada disability wale BPL logon ko monthly pension milti hai. Pehle sarkaari hospital se disability certificate banwao, phir Social Welfare Department mein apply karo."
+    },
+    {
+      "name": "PM SVANidhi — Street Vendor Loan",
+      "short_name": "PM SVANidhi",
+      "category": "Urban Livelihood",
+      "ministry": "Ministry of Housing & Urban Affairs",
+      "benefit": "Working capital loan: Rs. 10,000 first loan, Rs. 20,000 on repayment, Rs. 50,000 on third loan. Digital transactions incentive.",
+      "eligibility": "Street vendors vending in urban areas. Must have Certificate of Vending or Letter of Recommendation from ULB.",
+      "not_eligible": "Non-street vendors. Rural vendors (they have other schemes). Loan defaulters.",
+      "how_to_apply": "pmsvanidhi.mohua.gov.in portal. Urban Local Body office ya nearest bank branch.",
+      "documents": ["Aadhaar Card", "Vending Certificate or ULB letter", "Bank passbook", "Mobile number for UPI"],
+      "keywords": ["street vendor", "rehdi", "patri", "hawker", "svanidhi", "10000", "urban", "vending", "loan"],
+      "hindi_summary": "Rehdi-patri lagane walon ke liye PM SVANidhi se Rs. 10,000 pehla loan milta hai. Bina guarantee ke. ULB certificate chahiye. Digital payment karne pe extra bonus milta hai."
+    },
+    {
+      "name": "BPL Ration Card (National Food Security Act)",
+      "short_name": "Ration Card (BPL)",
+      "category": "Food Security",
+      "ministry": "Ministry of Consumer Affairs, Food & Public Distribution",
+      "benefit": "5 kg grain per person per month at Rs. 2/kg (wheat) and Rs. 3/kg (rice). Priority Household (PHH) gets more.",
+      "eligibility": "Annual household income below poverty line. SECC 2011 listed. Not owning more than defined land/assets.",
+      "not_eligible": "APL families. Income tax payers. Government employees. Families with 4-wheeler vehicles.",
+      "how_to_apply": "District Food & Civil Supplies office. Gram Panchayat. Online: state food portal.",
+      "documents": ["Aadhaar Card", "Address proof", "Income proof", "Family photo", "Mobile number"],
+      "keywords": ["ration", "food", "anaaj", "rice", "wheat", "BPL", "card", "PDS", "sasta anaaj", "2 rupee"],
+      "hindi_summary": "BPL ration card se 5 kg anaaj per person sirf 2-3 rupaye kilo milta hai. District Food Office ya Gram Panchayat mein apply karo. Aadhaar zaroori hai."
+    }
+  ],
+
+  "general_info": {
+    "project": "JanSetu AI — Booth Intelligence System",
+    "state": "Karnataka, India",
+    "districts": ["Raichur", "Bellary", "Koppal", "Yadgir", "Bidar"],
+    "purpose": "Political intelligence and welfare scheme saturation mapping for Karnataka booths",
+    "booths": "B001 to B010 across 5 districts",
+    "target_beneficiaries": "BPL families, farmers, students, women, elderly, disabled persons"
+  }
+}
